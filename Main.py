@@ -1,14 +1,16 @@
 import pygame, sys, time, random
-from button import Button
+from common_functions import Button, Player
 
 
 class GameBoard():
-    def __init__(self):
+    def __init__(self, character_choices):
         self.size = (1280,720)
         self.dice_num = (1,1)
         self.screen = pygame.display.set_mode(self.size, pygame.RESIZABLE)
+        self.characters = character_choices
+        self.playerTurn = 0
         self.board_original = pygame.image.load("Monopoly-board-template.png")
-        pygame.display.set_caption("Gameboard")
+        pygame.display.set_caption("Gameboard")  
 
 
     def dice(self, num, window_size):
@@ -16,15 +18,16 @@ class GameBoard():
 
 
     def game_board(self):
+        setup = True
         while True:
             self.screen.fill('white')
             window_size = pygame.display.get_surface().get_size()
             # use the original image to avoid resizing an already resized image making it pixelated
             self.board = pygame.transform.scale(self.board_original, (window_size[0]*2/3, window_size[1]))
 
-            rect = self.board.get_rect()
-            rect = rect.move((0, 0))
-            self.screen.blit(self.board, rect)
+            board_rect = self.board.get_rect()
+            board_rect = board_rect.move((0, 0))
+            self.screen.blit(self.board, board_rect)
 
             roll_dice_button_1 = Button(
                 image=None,
@@ -35,7 +38,6 @@ class GameBoard():
                 hovering_color="Green"
             )
 
-            # game dice
             roll_dice_button_1 = Button(
                 image=pygame.transform.scale(pygame.image.load(f"images/dice-{self.dice_num[0]}.png"), (window_size[0]/20,window_size[0]/20)),
                 pos=(((window_size[0]-400)/2)-50, (620/2)+50),
@@ -55,9 +57,18 @@ class GameBoard():
             )
 
             MOUSE_POSITION = pygame.mouse.get_pos()
-            roll_dice_button_1.changeColor(MOUSE_POSITION), roll_dice_button_1.update(self.screen)
-            roll_dice_button_2.changeColor(MOUSE_POSITION), roll_dice_button_2.update(self.screen)
+            roll_dice_button_1.changeColor(MOUSE_POSITION).update(self.screen)
+            roll_dice_button_2.changeColor(MOUSE_POSITION).update(self.screen)
 
+            if setup == True:
+                # bring characters into the game
+                mode = "setup"
+                setup = False
+            else:
+                mode = "update"
+
+            for i in self.characters:
+                self.screen = i.move(self.board, self.screen, mode=mode)
 
             for event in pygame.event.get():
                 if event.type == pygame.QUIT:
@@ -73,6 +84,14 @@ class GameBoard():
                             roll_dice_button_2.update(self.screen)
                             pygame.display.update()
                             time.sleep(0.1)
+
+                        for _ in range(sum(self.dice_num)):
+                            self.screen = self.characters[self.playerTurn].move(self.board, self.screen)
+                            # self.reblit() # call this for all characters, no need to waste time with current one
+                            pygame.display.update()
+                            time.sleep(0.1)
+
+                        self.playerTurn = (self.playerTurn + 1) % len(self.characters)
 
             pygame.display.update()
 
@@ -104,15 +123,13 @@ class MonopolyGame():
         #total number of players playing
         TOTAL_NO_PLAYERS = self.num_players
 
-        selected_characters = []
-
         #player number which changes dynamically after every selection
         player_num = 0
         #player text on screen which changes after every selection
         player_num_char = 1
         #characters selection being stored in a dictionary
         characters = {
-            1: self.load_image("top_hat.png"),
+            1: self.load_image("Top hat.png"),
             2: self.load_image("car.png"),
             3: self.load_image("dog.png"),
             4: self.load_image("battleship.png"),
@@ -209,24 +226,24 @@ class MonopolyGame():
                         current_character_index = (current_character_index + 1) % (len(characters)+1)
                     elif select_button.checkForInput(CHARACTER_MOUSE_POS):
                         if player_num < TOTAL_NO_PLAYERS:
-                            self.saved_selections.append(self.character_selections[current_character_index])
+                            self.saved_selections.append(Player(
+                                                            player_no=len(self.saved_selections)+1,
+                                                            game_piece=characters[current_character_index],
+                                                            piece_name=self.character_selections[current_character_index]
+                                                            )
+                                                        )
 
                             del characters[current_character_index]
 
                             player_num += 1
                             if player_num_char < TOTAL_NO_PLAYERS:
                                 player_num_char += 1
-                            if len(self.saved_selections) >= TOTAL_NO_PLAYERS:
-                                print(TOTAL_NO_PLAYERS)
-                                select_button.hide()
-                                select_button.update(self.screen)
 
                             print(f' player {player_num} has selected the {self.character_selections[current_character_index]}')
-                            selected_characters.append(self.character_selections[current_character_index])
                             character_text = self.get_font(200).render(f'{player_num}', True, "White")                  
 
                     elif start_game_button.checkForInput(CHARACTER_MOUSE_POS):
-                        game = GameBoard()
+                        game = GameBoard(self.saved_selections)
                         game.game_board()
 
             pygame.display.flip()
@@ -237,7 +254,7 @@ class MonopolyGame():
         while True:
             MOUSE_POSITION = pygame.mouse.get_pos()
 
-            self.screen.fill("black") 
+            self.screen.fill("black")
 
             no_player_text = self.get_font(60).render("Select the number of players:", True, 'White')
             NO_OF_PLAYERS_RECT = no_player_text.get_rect(center=(640, 150))
@@ -361,30 +378,30 @@ class MonopolyGame():
             menu_rect = menu_text.get_rect(center=(640, 100))
 
             PLAY_BUTTON = Button(
-            image= None,
-            pos=(640, 250), 
-            text_input="PLAY",
-            font=self.get_font(75),
-            base_color="#FFFFFF",
-            hovering_color="red"
+                image= None,
+                pos=(640, 250), 
+                text_input="PLAY",
+                font=self.get_font(75),
+                base_color="#FFFFFF",
+                hovering_color="red"
             )
 
             TUTORIAL_BUTTON = Button(
-            image= None,
-            pos=(640, 400),
-            text_input="TUTORIAL",
-            font=self.get_font(75),
-            base_color="#FFFFFF",
-            hovering_color="red"
+                image= None,
+                pos=(640, 400),
+                text_input="TUTORIAL",
+                font=self.get_font(75),
+                base_color="#FFFFFF",
+                hovering_color="red"
             )
 
             QUIT_BUTTON = Button(
-            image= None,
-            pos=(640, 550),
-            text_input="QUIT",
-            font=self.get_font(75),
-            base_color="#FFFFFF",
-            hovering_color="red"
+                image= None,
+                pos=(640, 550),
+                text_input="QUIT",
+                font=self.get_font(75),
+                base_color="#FFFFFF",
+                hovering_color="red"
             )
 
             self.screen.blit(menu_text, menu_rect)
