@@ -66,19 +66,25 @@ class Player():
 
         else:
             print(self.position)
+            print(board.get_size())
             if (self.position[1] > board.get_size()[1]*10.5/12 and self.position[1] < board.get_size()[1]) and self.position[0] > 0:
                 self.position = ((self.position[0] - board.get_size()[0]*1/12), self.position[1]) # go left and update position
             elif self.position[1] > 0 and (self.position[0] >= 0 and self.position[0] < board.get_size()[0]*0.5/12):
                 self.position = (self.position[0], (self.position[1] - board.get_size()[1]*1/12)) # go up and update position
-            elif (self.position[0] >= 0 and self.position[0] < board.get_size()[0]*0.5/12) and self.position[0] < board.get_size()[0]:
+            elif (self.position[1] >= 0 and self.position[1] < board.get_size()[0]*0.5/12) and self.position[0] < board.get_size()[0]*11/12:
                 self.position = ((self.position[0] + board.get_size()[0]*1/12), self.position[1]) # go right and update position
-            elif self.position[1] < board.get_size()[1] and (self.position[0] >= 0 and self.position[0] < board.get_size()[0]*0.5/12):
+            elif self.position[1] < board.get_size()[1] and (self.position[0] >= board.get_size()[0]*11/12 and self.position[0] < board.get_size()[0]):
                 self.position = (self.position[0], (self.position[1] + board.get_size()[1]*1/12)) # go down and update position
+                print(self.position)
 
             if self.position[0] < 0:
                 self.position = (0, self.position[1])
             if self.position[1] < 0:
                 self.position = (self.position[0], 0)
+            if self.position[0] >= board.get_size()[0]:
+                self.position = (board.get_size()[0]*11/12, 0)
+            if self.position[1] >= board.get_size()[1]:
+                self.position = (board.get_size()[0]*11/12, board.get_size()[1]*11/12)
 
             rect = self.game_piece.get_rect()
             # TODO: get_rect() of the character and just adjust coords rather than re-writing
