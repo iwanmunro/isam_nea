@@ -2,6 +2,26 @@ import pygame, sys, time, random
 from common_functions import Button, Player
 
 
+class Character():
+    def __init__ (self,name,img_path):
+        pygame.init()
+        self.character_name = name 
+        self.icon = self.image(img_path)
+        self.character_position = (720,50)
+        self.cash = 1500
+        self.property_button = Button(
+                image=None,
+                pos= (1068,600),
+                text_input="View Owned Properties",
+                font= pygame.font.Font("impact.ttf", 35),
+                base_color="Black",
+                hovering_color="Green"
+            )
+    def image(self,img_path):
+        img_path = f"{self.character_name}.png"
+        return pygame.transform.scale(pygame.image.load(img_path), (60,60))
+
+
 class GameBoard():
     def __init__(self, character_choices):
         self.size = (1280,720)
@@ -13,8 +33,62 @@ class GameBoard():
         pygame.display.set_caption("Gameboard")  
 
 
+    def character_info(self):
+        # Define the size and position of the rectangle
+        window_size = pygame.display.get_surface().get_size()
+        rect_width = window_size[0] // 3  # One-third of the window width
+        rect_height = window_size[1]
+        rect_x = (2 * window_size[0]) // 3  # One-third from the right-hand side
+        rect_y = 0
+
+        #create display background
+        colour = (152,251,152)
+        pygame.draw.rect(self.screen, colour, pygame.Rect(rect_x, rect_y, rect_width, rect_height))
+        
+        x_coordinate = 875
+        y_offset = 20
+
+        # Create objects for each characters
+        self.character_objects = [Character(name.piece_name,f'{name.piece_name}.png') for name in self.characters]
+        player_num = 1
+        for character in self.character_objects:
+            if character != self.character_objects[0]:
+                y_offset += 130
+            self.screen.blit(character.icon, (x_coordinate,y_offset+40))
+            
+            #Display character cash
+            font = pygame.font.Font("impact.ttf", 45)
+            cash_text = font.render(f"Player {player_num}: ${character.cash}", True, "Black")
+            self.screen.blit(cash_text, (x_coordinate + 60, y_offset + 47))
+            player_num += 1
+        
+            #Drwaiing a button to display player properties
+            property_button = character.property_button
+            MOUSE_POSITION = pygame.mouse.get_pos()
+            property_button.changeColor(MOUSE_POSITION)
+            property_button.update(self.screen)
+
+        pygame.display.flip()
+        pygame.display.update()
+
+
     def dice(self, num, window_size):
         return pygame.transform.scale(pygame.image.load(f"images/dice-{num}.png"), (window_size[0]/20,window_size[0]/20))
+
+
+    def display_popup(self,card_info):
+        popup_width = 400
+        popup_height = 200
+        popup_x = (self.screen.get_width() - popup_width) // 2
+        popup_y = (self.screen.get_height() - popup_height) // 2
+
+        pygame.draw.rect(self.screen, (255, 255, 255), (popup_x, popup_y, popup_width, popup_height))
+        
+        # Display card event information (customize this part)
+        font = pygame.font.Font(None, 36)
+        text_surface = font.render(card_info, True, (0, 0, 0))
+        text_rect = text_surface.get_rect(center=(popup_x + popup_width // 2, popup_y + popup_height // 2))
+        self.screen.blit(text_surface, text_rect)
 
 
     def game_board(self):
@@ -29,12 +103,22 @@ class GameBoard():
             board_rect = board_rect.move((0, 0))
             self.screen.blit(self.board, board_rect)
 
-            roll_dice_button_1 = Button(
-                image=None,
-                pos=(((window_size[0]-400)/2)-50, (620/2)+50),
+            #chance card
+            chance_card = Button(
+                image=pygame.transform.scale(pygame.image.load("chance_card.webp"),(200,140)),
+                pos=(270,230),
                 text_input='',
                 font=pygame.font.Font("impact.ttf", 75),
-                base_color="White",
+                base_color= "White",
+                hovering_color="Green"
+            )
+
+            community_chest_card = Button(
+                image=pygame.transform.scale(pygame.image.load("community_chest.png"),(200,140)),
+                pos=(570,500),
+                text_input='',
+                font=pygame.font.Font("impact.ttf", 75),
+                base_color= "White",
                 hovering_color="Green"
             )
 
@@ -57,6 +141,10 @@ class GameBoard():
             )
 
             MOUSE_POSITION = pygame.mouse.get_pos()
+
+            chance_card.changeColor(MOUSE_POSITION), chance_card.update(self.screen)
+            community_chest_card.changeColor(MOUSE_POSITION), community_chest_card.update(self.screen)
+
             roll_dice_button_1.changeColor(MOUSE_POSITION).update(self.screen)
             roll_dice_button_2.changeColor(MOUSE_POSITION).update(self.screen)
 
@@ -70,12 +158,15 @@ class GameBoard():
             for i in self.characters:
                 self.screen = i.move(self.board, self.screen, mode=mode)
 
+            self.character_info()
+
             for event in pygame.event.get():
                 if event.type == pygame.QUIT:
                     pygame.quit()
                     sys.exit()
                 elif event.type == pygame.MOUSEBUTTONDOWN:
                     if roll_dice_button_1.checkForInput(MOUSE_POSITION) or roll_dice_button_2.checkForInput(MOUSE_POSITION):
+                        # 15 iterations of randomising ("rolling") the dice
                         for i in range(15):
                             self.dice_num=(random.randint(1,6),random.randint(1,6))
                             roll_dice_button_1.image = self.dice(self.dice_num[0], window_size)
@@ -85,13 +176,20 @@ class GameBoard():
                             pygame.display.update()
                             time.sleep(0.1)
 
+                        # moving by the dice number
                         for _ in range(sum(self.dice_num)):
                             self.screen = self.characters[self.playerTurn].move(self.board, self.screen)
-                            # self.reblit() # call this for all characters, no need to waste time with current one
                             pygame.display.update()
-                            time.sleep(0.1)
+                            time.sleep(0.25)
+
 
                         self.playerTurn = (self.playerTurn + 1) % len(self.characters)
+
+                    elif chance_card.checkForInput(MOUSE_POSITION):
+                        self.display_popup('Card info')
+                        chance_card.update(self.screen)
+                    elif community_chest_card.checkForInput(MOUSE_POSITION):
+                        pass
 
             pygame.display.update()
 
