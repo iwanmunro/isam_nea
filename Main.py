@@ -1,5 +1,5 @@
 import pygame, sys, time, random
-from common_functions import Button, Player
+from common_functions import cfButton, Player
 
 
 class Character():
@@ -9,7 +9,7 @@ class Character():
         self.icon = self.image(img_path)
         self.character_position = (720,50)
         self.cash = 1500
-        self.property_button = Button(
+        self.property_button = cfButton(
                 image=None,
                 pos= (1068,600),
                 text_input="View Owned Properties",
@@ -17,6 +17,7 @@ class Character():
                 base_color="Black",
                 hovering_color="Green"
             )
+
     def image(self,img_path):
         img_path = f"{self.character_name}.png"
         return pygame.transform.scale(pygame.image.load(img_path), (60,60))
@@ -27,6 +28,7 @@ class GameBoard():
         self.size = (1280,720)
         self.dice_num = (1,1)
         self.screen = pygame.display.set_mode(self.size, pygame.RESIZABLE)
+        self.temporary_popups = []
         self.characters = character_choices
         self.playerTurn = 0
         self.board_original = pygame.image.load("Monopoly-board-template.png")
@@ -62,14 +64,13 @@ class GameBoard():
             self.screen.blit(cash_text, (x_coordinate + 60, y_offset + 47))
             player_num += 1
         
-            #Drwaiing a button to display player properties
+            #Drawing a button to display player properties
             property_button = character.property_button
             MOUSE_POSITION = pygame.mouse.get_pos()
             property_button.changeColor(MOUSE_POSITION)
             property_button.update(self.screen)
 
-        pygame.display.flip()
-        pygame.display.update()
+        return property_button
 
 
     def dice(self, num, window_size):
@@ -104,7 +105,7 @@ class GameBoard():
             self.screen.blit(self.board, board_rect)
 
             #chance card
-            chance_card = Button(
+            chance_card = cfButton(
                 image=pygame.transform.scale(pygame.image.load("chance_card.webp"),(200,140)),
                 pos=(270,230),
                 text_input='',
@@ -113,7 +114,7 @@ class GameBoard():
                 hovering_color="Green"
             )
 
-            community_chest_card = Button(
+            community_chest_card = cfButton(
                 image=pygame.transform.scale(pygame.image.load("community_chest.png"),(200,140)),
                 pos=(570,500),
                 text_input='',
@@ -122,7 +123,7 @@ class GameBoard():
                 hovering_color="Green"
             )
 
-            roll_dice_button_1 = Button(
+            roll_dice_button_1 = cfButton(
                 image=pygame.transform.scale(pygame.image.load(f"images/dice-{self.dice_num[0]}.png"), (window_size[0]/20,window_size[0]/20)),
                 pos=(((window_size[0]-400)/2)-50, (620/2)+50),
                 text_input='',
@@ -131,7 +132,7 @@ class GameBoard():
                 hovering_color="Green"
             )
 
-            roll_dice_button_2 = Button(
+            roll_dice_button_2 = cfButton(
                 image=pygame.transform.scale(pygame.image.load(f"images/dice-{self.dice_num[1]}.png"), (window_size[0]/20,window_size[0]/20)),
                 pos=(((window_size[0]-400)/2)+25, (620/2)+50),
                 text_input='',
@@ -148,6 +149,7 @@ class GameBoard():
             roll_dice_button_1.changeColor(MOUSE_POSITION).update(self.screen)
             roll_dice_button_2.changeColor(MOUSE_POSITION).update(self.screen)
 
+
             if setup == True:
                 # bring characters into the game
                 mode = "setup"
@@ -158,14 +160,23 @@ class GameBoard():
             for i in self.characters:
                 self.screen = i.move(self.board, self.screen, mode=mode)
 
-            self.character_info()
+            for i in self.temporary_popups:
+                self.display_popup(i[1])
+
+            property_button = self.character_info()
 
             for event in pygame.event.get():
                 if event.type == pygame.QUIT:
                     pygame.quit()
                     sys.exit()
                 elif event.type == pygame.MOUSEBUTTONDOWN:
-                    if roll_dice_button_1.checkForInput(MOUSE_POSITION) or roll_dice_button_2.checkForInput(MOUSE_POSITION):
+                    if len(self.temporary_popups) > 0:
+                        for i in range(len(self.temporary_popups)):
+                            if self.temporary_popups[i][0].checkForInput(MOUSE_POSITION):
+                                self.temporary_popups.pop(i)
+                                break
+
+                    elif roll_dice_button_1.checkForInput(MOUSE_POSITION) or roll_dice_button_2.checkForInput(MOUSE_POSITION):
                         # 15 iterations of randomising ("rolling") the dice
                         for i in range(15):
                             self.dice_num=(random.randint(1,6),random.randint(1,6))
@@ -175,21 +186,23 @@ class GameBoard():
                             roll_dice_button_2.update(self.screen)
                             pygame.display.update()
                             time.sleep(0.1)
-
                         # moving by the dice number
                         for _ in range(sum(self.dice_num)):
                             self.screen = self.characters[self.playerTurn].move(self.board, self.screen)
                             pygame.display.update()
-                            time.sleep(0.25)
+                            time.sleep(0.2)
 
 
                         self.playerTurn = (self.playerTurn + 1) % len(self.characters)
 
                     elif chance_card.checkForInput(MOUSE_POSITION):
-                        self.display_popup('Card info')
-                        chance_card.update(self.screen)
+                        self.temporary_popups.append((chance_card, r'Chance Card'))
+
                     elif community_chest_card.checkForInput(MOUSE_POSITION):
-                        pass
+                        self.temporary_popups.append((community_chest_card, r'Community Chest'))
+
+                    elif property_button.checkForInput(MOUSE_POSITION):
+                        self.temporary_popups.append((property_button, r'Properties'))
 
             pygame.display.update()
 
@@ -242,7 +255,7 @@ class MonopolyGame():
             CHARACTER_MOUSE_POS = pygame.mouse.get_pos()
             self.screen.fill("black")
 
-            start_game_button = Button(
+            start_game_button = cfButton(
                 image=None,
                 pos=(600, 320),
                 text_input="Begin game",
@@ -260,7 +273,7 @@ class MonopolyGame():
                 CHARACTER_RECT = character_text.get_rect(center=(640, 150))
                 self.screen.blit(character_text, CHARACTER_RECT)
 
-                CHARACTER_BACK = Button(
+                CHARACTER_BACK = cfButton(
                     image=None,
                     pos=(530, 620), 
                     text_input="Back", 
@@ -272,7 +285,7 @@ class MonopolyGame():
                 CHARACTER_BACK.changeColor(CHARACTER_MOUSE_POS).update(self.screen)
 
                 #select button that will dissapear once all players have selected their character
-                select_button = Button(
+                select_button = cfButton(
                     image=None,
                     pos=(725, 620),
                     text_input="Select",
@@ -284,7 +297,7 @@ class MonopolyGame():
                 select_button.update(self.screen)
 
                 # Buttons to switch characters
-                switch_right = Button(
+                switch_right = cfButton(
                     image=None,
                     pos=(800, 410), 
                     text_input=">",
@@ -292,7 +305,7 @@ class MonopolyGame():
                     base_color="White",
                     hovering_color="Green"
                 )
-                switch_left = Button(
+                switch_left = cfButton(
                     image=None,
                     pos=(480, 410), 
                     text_input="<",
@@ -365,7 +378,7 @@ class MonopolyGame():
             self.screen.blit(no_player_text, NO_OF_PLAYERS_RECT)
 
             # Buttons to increase/decrease the number of players to begin the game
-            num_increase = Button(
+            num_increase = cfButton(
             image=None,
             pos=(800, 410),
             text_input="+",
@@ -376,7 +389,7 @@ class MonopolyGame():
             num_increase.changeColor(MOUSE_POSITION)
             num_increase.update(self.screen)
 
-            num_decrease = Button(
+            num_decrease = cfButton(
             image=None,
             pos=(480, 410),
             text_input="-",
@@ -389,7 +402,7 @@ class MonopolyGame():
             num_decrease.update(self.screen)
 
             #back_button
-            PLAY_BACK_BUTTON = Button(
+            PLAY_BACK_BUTTON = cfButton(
             image=None,
             pos=(530, 620),
             text_input='Back',
@@ -401,7 +414,7 @@ class MonopolyGame():
             PLAY_BACK_BUTTON.update(self.screen)
 
             #Advance button
-            START_BUTTON = Button(
+            START_BUTTON = cfButton(
             image=None,
             pos=(725, 620),
             text_input='Advance',
@@ -444,7 +457,7 @@ class MonopolyGame():
             TUTORIAL_RECT = TUTORIAL_TEXT.get_rect(center=(640, 260))
             self.screen.blit(TUTORIAL_TEXT, TUTORIAL_RECT)
 
-            TUTORIAL_BACK = Button(
+            TUTORIAL_BACK = cfButton(
                 image=None,
                 pos=(640, 460),
                 text_input="BACK",
@@ -475,7 +488,7 @@ class MonopolyGame():
             menu_text = self.get_font(100).render("MONOPOLY", True, "#FF0000")
             menu_rect = menu_text.get_rect(center=(640, 100))
 
-            PLAY_BUTTON = Button(
+            PLAY_BUTTON = cfButton(
                 image= None,
                 pos=(640, 250), 
                 text_input="PLAY",
@@ -484,7 +497,7 @@ class MonopolyGame():
                 hovering_color="red"
             )
 
-            TUTORIAL_BUTTON = Button(
+            TUTORIAL_BUTTON = cfButton(
                 image= None,
                 pos=(640, 400),
                 text_input="TUTORIAL",
@@ -493,7 +506,7 @@ class MonopolyGame():
                 hovering_color="red"
             )
 
-            QUIT_BUTTON = Button(
+            QUIT_BUTTON = cfButton(
                 image= None,
                 pos=(640, 550),
                 text_input="QUIT",

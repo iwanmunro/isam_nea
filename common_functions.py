@@ -1,7 +1,7 @@
 import time
 import pygame
 
-class Button():
+class cfButton():
     def __init__(self, image, pos, text_input, font, base_color, hovering_color):
         self.image = image
         self.x_pos = pos[0]
@@ -66,14 +66,25 @@ class Player():
             screen.blit(self.game_piece, rect)
 
         else:
+            print("x", ((board.get_size()[0]-self.position[0])/board.get_size()[0])*100)
+            print("y", ((board.get_size()[1]-self.position[1])/board.get_size()[1])*100)
+            if ((board.get_size()[0]-self.position[0])/board.get_size()[0])*100 < 10 and ((board.get_size()[1]-self.position[1])/board.get_size()[1])*100 < 10 or \
+                ((board.get_size()[0]-self.position[0])/board.get_size()[0])*100 == 100 and ((board.get_size()[1]-self.position[1])/board.get_size()[1])*100 < 10:
+                multiplier = 8
+            elif ((board.get_size()[0]-self.position[0])/board.get_size()[0])*100 == 100 and ((board.get_size()[1]-self.position[1])/board.get_size()[1])*100 == 100:
+                # ((board.get_size()[0]-self.position[0])/board.get_size()[0])*100 < 10 and ((board.get_size()[1]-self.position[1])/board.get_size()[1])*100 < 10:
+                multiplier = 7.2
+            else:
+                multiplier = 12
+
             if (self.position[1] > board.get_size()[1]*10.5/12 and self.position[1] < board.get_size()[1]) and self.position[0] > 0:
-                self.position = ((self.position[0] - board.get_size()[0]*1/12), self.position[1]) # go left and update position
+                self.position = ((self.position[0] - board.get_size()[0]*1/multiplier), self.position[1]) # go left and update position
             elif self.position[1] > 0 and (self.position[0] >= 0 and self.position[0] < board.get_size()[0]*0.5/12):
-                self.position = (self.position[0], (self.position[1] - board.get_size()[1]*1/12)) # go up and update position
+                self.position = (self.position[0], (self.position[1] - board.get_size()[1]*1/multiplier)) # go up and update position
             elif (self.position[1] >= 0 and self.position[1] < board.get_size()[0]*0.5/12) and self.position[0] < board.get_size()[0]*11/12:
-                self.position = ((self.position[0] + board.get_size()[0]*1/12), self.position[1]) # go right and update position
+                self.position = ((self.position[0] + board.get_size()[0]*1/multiplier), self.position[1]) # go right and update position
             elif self.position[1] < board.get_size()[1] and (self.position[0] >= board.get_size()[0]*11/12 and self.position[0] < board.get_size()[0]):
-                self.position = (self.position[0], (self.position[1] + board.get_size()[1]*1/12)) # go down and update position
+                self.position = (self.position[0], (self.position[1] + board.get_size()[1]*1/multiplier)) # go down and update position
 
             if self.position[0] < 0:
                 self.position = (0, self.position[1])
