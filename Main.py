@@ -185,13 +185,17 @@ class GameBoard():
                             roll_dice_button_1.update(self.screen)
                             roll_dice_button_2.update(self.screen)
                             pygame.display.update()
-                            time.sleep(0.1)
+                            time.sleep(0.01)
+
+                        self.characters[self.playerTurn].position_int = (self.characters[self.playerTurn].position_int + sum(self.dice_num)) % 40
+
                         # moving by the dice number
                         for _ in range(sum(self.dice_num)):
                             self.screen = self.characters[self.playerTurn].move(self.board, self.screen)
                             pygame.display.update()
                             time.sleep(0.2)
 
+                        curr_property = self.properties[self.characters[self.playerTurn].position_int]
 
                         self.playerTurn = (self.playerTurn + 1) % len(self.characters)
 

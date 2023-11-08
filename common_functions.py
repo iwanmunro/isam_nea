@@ -49,6 +49,7 @@ class Player():
         self.game_piece = game_piece
         self.piece_name = piece_name
         self.position = (0, 0)
+        self.position_int = 0
         self.properties = []
 
 
@@ -66,34 +67,36 @@ class Player():
             screen.blit(self.game_piece, rect)
 
         else:
-            print("x", ((board.get_size()[0]-self.position[0])/board.get_size()[0])*100)
-            print("y", ((board.get_size()[1]-self.position[1])/board.get_size()[1])*100)
             if ((board.get_size()[0]-self.position[0])/board.get_size()[0])*100 < 10 and ((board.get_size()[1]-self.position[1])/board.get_size()[1])*100 < 10 or \
                 ((board.get_size()[0]-self.position[0])/board.get_size()[0])*100 == 100 and ((board.get_size()[1]-self.position[1])/board.get_size()[1])*100 < 10:
                 multiplier = 8
-            elif ((board.get_size()[0]-self.position[0])/board.get_size()[0])*100 == 100 and ((board.get_size()[1]-self.position[1])/board.get_size()[1])*100 == 100:
-                # ((board.get_size()[0]-self.position[0])/board.get_size()[0])*100 < 10 and ((board.get_size()[1]-self.position[1])/board.get_size()[1])*100 < 10:
-                multiplier = 7.2
+            elif ((board.get_size()[0]-self.position[0])/board.get_size()[0])*100 == 100 and ((board.get_size()[1]-self.position[1])/board.get_size()[1])*100 == 100 or \
+                ((board.get_size()[0]-self.position[0])/board.get_size()[0])*100 < 10 and ((board.get_size()[1]-self.position[1])/board.get_size()[1])*100 == 100:
+                multiplier = 7.5
             else:
                 multiplier = 12
 
-            if (self.position[1] > board.get_size()[1]*10.5/12 and self.position[1] < board.get_size()[1]) and self.position[0] > 0:
+            if (self.position[1] >= board.get_size()[1]*11/12 and self.position[1] < board.get_size()[1]) and self.position[0] > 0:
                 self.position = ((self.position[0] - board.get_size()[0]*1/multiplier), self.position[1]) # go left and update position
             elif self.position[1] > 0 and (self.position[0] >= 0 and self.position[0] < board.get_size()[0]*0.5/12):
                 self.position = (self.position[0], (self.position[1] - board.get_size()[1]*1/multiplier)) # go up and update position
             elif (self.position[1] >= 0 and self.position[1] < board.get_size()[0]*0.5/12) and self.position[0] < board.get_size()[0]*11/12:
                 self.position = ((self.position[0] + board.get_size()[0]*1/multiplier), self.position[1]) # go right and update position
-            elif self.position[1] < board.get_size()[1] and (self.position[0] >= board.get_size()[0]*11/12 and self.position[0] < board.get_size()[0]):
+            elif self.position[1] < board.get_size()[1] and (self.position[0] >= board.get_size()[0]*10.5/12 and self.position[0] < board.get_size()[0]):
                 self.position = (self.position[0], (self.position[1] + board.get_size()[1]*1/multiplier)) # go down and update position
 
             if self.position[0] < 0:
                 self.position = (0, self.position[1])
+                self.move(board, screen)
             if self.position[1] < 0:
                 self.position = (self.position[0], 0)
-            if self.position[0] >= board.get_size()[0]:
+                self.move(board, screen)
+            if self.position[0] > board.get_size()[0]*11/12:
                 self.position = (board.get_size()[0]*11/12, 0)
-            if self.position[1] >= board.get_size()[1]:
+                self.move(board, screen)
+            if self.position[1] > board.get_size()[1]*11/12:
                 self.position = (board.get_size()[0]*11/12, board.get_size()[1]*11/12)
+                self.move(board, screen)
 
             rect = self.game_piece.get_rect()
             rect = rect.move(self.position)
