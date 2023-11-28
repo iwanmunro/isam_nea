@@ -1,5 +1,5 @@
 import pygame, sys, time, random
-from common_functions import cfButton, Player
+from common_functions_2 import Button, Player
 
 
 class Character():
@@ -9,7 +9,7 @@ class Character():
         self.icon = self.image(img_path)
         self.character_position = (720,50)
         self.cash = 1500
-        self.property_button = cfButton(
+        self.property_button = Button(
                 image=None,
                 pos= (1068,600),
                 text_input="View Owned Properties",
@@ -17,7 +17,6 @@ class Character():
                 base_color="Black",
                 hovering_color="Green"
             )
-
     def image(self,img_path):
         img_path = f"{self.character_name}.png"
         return pygame.transform.scale(pygame.image.load(img_path), (60,60))
@@ -28,11 +27,55 @@ class GameBoard():
         self.size = (1280,720)
         self.dice_num = (1,1)
         self.screen = pygame.display.set_mode(self.size, pygame.RESIZABLE)
-        self.temporary_popups = []
         self.characters = character_choices
         self.playerTurn = 0
         self.board_original = pygame.image.load("Monopoly-board-template.png")
         pygame.display.set_caption("Gameboard")  
+        self.properties_coordinates = {
+            "Go": (1100, 675),
+            "Mediterranean Avenue": (995, 675),
+            "Community Chest 1": (910, 675),
+            "Baltic Avenue": (825, 675),
+            "Income Tax": (735, 675),
+            "Reading Railroad": (650, 675),
+            "Oriental Avenue": (565, 675),
+            "Chance 1": (480, 675),
+            "Vermont Avenue": (395, 675),
+            "Connecticut Avenue": (310, 675),
+            "Jail": (225, 675),
+            "St. Charles Place": (130, 675),
+            "Electric Company": (45, 675),
+            "States Avenue": (10, 590),
+            "Virginia Avenue": (10, 505),
+            "Pennsylvania Railroad": (10, 420),
+            "St. James Place": (10, 335),
+            "Community Chest 2": (10, 250),
+            "Tennessee Avenue": (10, 165),
+            "New York Avenue": (10, 80),
+            "Free Parking": (10, 10),
+            "Kentucky Avenue": (95, 10),
+            "Chance 2": (180, 10),
+            "Indiana Avenue": (265, 10),
+            "Illinois Avenue": (350, 10),
+            "B. & O. Railroad": (435, 10),
+            "Atlantic Avenue": (520, 10),
+            "Ventnor Avenue": (605, 10),
+            "Water Works": (690, 10),
+            "Marvin Gardens": (775, 10),
+            "Go To Jail": (860, 10),
+            "Pacific Avenue": (945, 10),
+            "North Carolina Avenue": (1030, 10),
+            "Community Chest 3": (1115, 10),
+            "Pennsylvania Avenue": (1190, 10),
+            "Short Line": (1255, 95),
+            "Chance 3": (1255, 180),
+            "Park Place": (1255, 265),
+            "Luxury Tax": (1255, 350),
+            "Boardwalk": (1255, 435)
+        }
+    
+    def get_property_name(self,property_coord):
+        return self.properties_coordinates.get(property_coord,None)
 
 
     def character_info(self):
@@ -64,32 +107,18 @@ class GameBoard():
             self.screen.blit(cash_text, (x_coordinate + 60, y_offset + 47))
             player_num += 1
         
-            #Drawing a button to display player properties
+            #Drwaiing a button to display player properties
             property_button = character.property_button
             MOUSE_POSITION = pygame.mouse.get_pos()
             property_button.changeColor(MOUSE_POSITION)
             property_button.update(self.screen)
 
-        return property_button
+        pygame.display.flip()
+        pygame.display.update()
 
 
     def dice(self, num, window_size):
         return pygame.transform.scale(pygame.image.load(f"images/dice-{num}.png"), (window_size[0]/20,window_size[0]/20))
-
-
-    def display_popup(self,card_info):
-        popup_width = 400
-        popup_height = 200
-        popup_x = (self.screen.get_width() - popup_width) // 2
-        popup_y = (self.screen.get_height() - popup_height) // 2
-
-        pygame.draw.rect(self.screen, (255, 255, 255), (popup_x, popup_y, popup_width, popup_height))
-        
-        # Display card event information (customize this part)
-        font = pygame.font.Font(None, 36)
-        text_surface = font.render(card_info, True, (0, 0, 0))
-        text_rect = text_surface.get_rect(center=(popup_x + popup_width // 2, popup_y + popup_height // 2))
-        self.screen.blit(text_surface, text_rect)
 
 
     def game_board(self):
@@ -105,7 +134,7 @@ class GameBoard():
             self.screen.blit(self.board, board_rect)
 
             #chance card
-            chance_card = cfButton(
+            chance_card = Button(
                 image=pygame.transform.scale(pygame.image.load("chance_card.webp"),(200,140)),
                 pos=(270,230),
                 text_input='',
@@ -114,7 +143,7 @@ class GameBoard():
                 hovering_color="Green"
             )
 
-            community_chest_card = cfButton(
+            community_chest_card = Button(
                 image=pygame.transform.scale(pygame.image.load("community_chest.png"),(200,140)),
                 pos=(570,500),
                 text_input='',
@@ -123,7 +152,7 @@ class GameBoard():
                 hovering_color="Green"
             )
 
-            roll_dice_button_1 = cfButton(
+            roll_dice_button_1 = Button(
                 image=pygame.transform.scale(pygame.image.load(f"images/dice-{self.dice_num[0]}.png"), (window_size[0]/20,window_size[0]/20)),
                 pos=(((window_size[0]-400)/2)-50, (620/2)+50),
                 text_input='',
@@ -132,7 +161,7 @@ class GameBoard():
                 hovering_color="Green"
             )
 
-            roll_dice_button_2 = cfButton(
+            roll_dice_button_2 = Button(
                 image=pygame.transform.scale(pygame.image.load(f"images/dice-{self.dice_num[1]}.png"), (window_size[0]/20,window_size[0]/20)),
                 pos=(((window_size[0]-400)/2)+25, (620/2)+50),
                 text_input='',
@@ -149,7 +178,6 @@ class GameBoard():
             roll_dice_button_1.changeColor(MOUSE_POSITION).update(self.screen)
             roll_dice_button_2.changeColor(MOUSE_POSITION).update(self.screen)
 
-
             if setup == True:
                 # bring characters into the game
                 mode = "setup"
@@ -160,23 +188,14 @@ class GameBoard():
             for i in self.characters:
                 self.screen = i.move(self.board, self.screen, mode=mode)
 
-            for i in self.temporary_popups:
-                self.display_popup(i[1])
-
-            property_button = self.character_info()
+            self.character_info()
 
             for event in pygame.event.get():
                 if event.type == pygame.QUIT:
                     pygame.quit()
                     sys.exit()
                 elif event.type == pygame.MOUSEBUTTONDOWN:
-                    if len(self.temporary_popups) > 0:
-                        for i in range(len(self.temporary_popups)):
-                            if self.temporary_popups[i][0].checkForInput(MOUSE_POSITION):
-                                self.temporary_popups.pop(i)
-                                break
-
-                    elif roll_dice_button_1.checkForInput(MOUSE_POSITION) or roll_dice_button_2.checkForInput(MOUSE_POSITION):
+                    if roll_dice_button_1.checkForInput(MOUSE_POSITION) or roll_dice_button_2.checkForInput(MOUSE_POSITION):
                         # 15 iterations of randomising ("rolling") the dice
                         for i in range(15):
                             self.dice_num=(random.randint(1,6),random.randint(1,6))
@@ -185,31 +204,26 @@ class GameBoard():
                             roll_dice_button_1.update(self.screen)
                             roll_dice_button_2.update(self.screen)
                             pygame.display.update()
-                            time.sleep(0.01)
-
-                        self.characters[self.playerTurn].position_int = (self.characters[self.playerTurn].position_int + sum(self.dice_num)) % 40
+                            time.sleep(0.1)
 
                         # moving by the dice number
                         for _ in range(sum(self.dice_num)):
                             self.screen = self.characters[self.playerTurn].move(self.board, self.screen)
                             pygame.display.update()
-                            time.sleep(0.2)
+                            time.sleep(0.25)
 
-                        curr_property = self.properties[self.characters[self.playerTurn].position_int]
 
                         self.playerTurn = (self.playerTurn + 1) % len(self.characters)
 
                     elif chance_card.checkForInput(MOUSE_POSITION):
-                        self.temporary_popups.append((chance_card, r'Chance Card'))
-
+                        pass
                     elif community_chest_card.checkForInput(MOUSE_POSITION):
-                        self.temporary_popups.append((community_chest_card, r'Community Chest'))
-
-                    elif property_button.checkForInput(MOUSE_POSITION):
-                        self.temporary_popups.append((property_button, r'Properties'))
+                        pass
 
             pygame.display.update()
 
+class Transactions:
+    pass
 
 class MonopolyGame():
     def __init__(self):
@@ -259,7 +273,7 @@ class MonopolyGame():
             CHARACTER_MOUSE_POS = pygame.mouse.get_pos()
             self.screen.fill("black")
 
-            start_game_button = cfButton(
+            start_game_button = Button(
                 image=None,
                 pos=(600, 320),
                 text_input="Begin game",
@@ -277,7 +291,7 @@ class MonopolyGame():
                 CHARACTER_RECT = character_text.get_rect(center=(640, 150))
                 self.screen.blit(character_text, CHARACTER_RECT)
 
-                CHARACTER_BACK = cfButton(
+                CHARACTER_BACK = Button(
                     image=None,
                     pos=(530, 620), 
                     text_input="Back", 
@@ -289,7 +303,7 @@ class MonopolyGame():
                 CHARACTER_BACK.changeColor(CHARACTER_MOUSE_POS).update(self.screen)
 
                 #select button that will dissapear once all players have selected their character
-                select_button = cfButton(
+                select_button = Button(
                     image=None,
                     pos=(725, 620),
                     text_input="Select",
@@ -301,7 +315,7 @@ class MonopolyGame():
                 select_button.update(self.screen)
 
                 # Buttons to switch characters
-                switch_right = cfButton(
+                switch_right = Button(
                     image=None,
                     pos=(800, 410), 
                     text_input=">",
@@ -309,7 +323,7 @@ class MonopolyGame():
                     base_color="White",
                     hovering_color="Green"
                 )
-                switch_left = cfButton(
+                switch_left = Button(
                     image=None,
                     pos=(480, 410), 
                     text_input="<",
@@ -353,10 +367,6 @@ class MonopolyGame():
                             player_num += 1
                             if player_num_char < TOTAL_NO_PLAYERS:
                                 player_num_char += 1
-
-                            print(f' player {player_num} has selected the {self.character_selections[current_character_index]}')
-                            character_text = self.get_font(200).render(f'{player_num}', True, "White")                  
-
                     elif start_game_button.checkForInput(CHARACTER_MOUSE_POS):
                         game = GameBoard(self.saved_selections)
                         game.game_board()
@@ -382,7 +392,7 @@ class MonopolyGame():
             self.screen.blit(no_player_text, NO_OF_PLAYERS_RECT)
 
             # Buttons to increase/decrease the number of players to begin the game
-            num_increase = cfButton(
+            num_increase = Button(
             image=None,
             pos=(800, 410),
             text_input="+",
@@ -393,7 +403,7 @@ class MonopolyGame():
             num_increase.changeColor(MOUSE_POSITION)
             num_increase.update(self.screen)
 
-            num_decrease = cfButton(
+            num_decrease = Button(
             image=None,
             pos=(480, 410),
             text_input="-",
@@ -406,7 +416,7 @@ class MonopolyGame():
             num_decrease.update(self.screen)
 
             #back_button
-            PLAY_BACK_BUTTON = cfButton(
+            PLAY_BACK_BUTTON = Button(
             image=None,
             pos=(530, 620),
             text_input='Back',
@@ -418,7 +428,7 @@ class MonopolyGame():
             PLAY_BACK_BUTTON.update(self.screen)
 
             #Advance button
-            START_BUTTON = cfButton(
+            START_BUTTON = Button(
             image=None,
             pos=(725, 620),
             text_input='Advance',
@@ -461,7 +471,7 @@ class MonopolyGame():
             TUTORIAL_RECT = TUTORIAL_TEXT.get_rect(center=(640, 260))
             self.screen.blit(TUTORIAL_TEXT, TUTORIAL_RECT)
 
-            TUTORIAL_BACK = cfButton(
+            TUTORIAL_BACK = Button(
                 image=None,
                 pos=(640, 460),
                 text_input="BACK",
@@ -492,7 +502,7 @@ class MonopolyGame():
             menu_text = self.get_font(100).render("MONOPOLY", True, "#FF0000")
             menu_rect = menu_text.get_rect(center=(640, 100))
 
-            PLAY_BUTTON = cfButton(
+            PLAY_BUTTON = Button(
                 image= None,
                 pos=(640, 250), 
                 text_input="PLAY",
@@ -501,7 +511,7 @@ class MonopolyGame():
                 hovering_color="red"
             )
 
-            TUTORIAL_BUTTON = cfButton(
+            TUTORIAL_BUTTON = Button(
                 image= None,
                 pos=(640, 400),
                 text_input="TUTORIAL",
@@ -510,7 +520,7 @@ class MonopolyGame():
                 hovering_color="red"
             )
 
-            QUIT_BUTTON = cfButton(
+            QUIT_BUTTON = Button(
                 image= None,
                 pos=(640, 550),
                 text_input="QUIT",
@@ -539,6 +549,119 @@ class MonopolyGame():
                         sys.exit()
 
                 pygame.display.update()
+
+class Property():
+    def __init__(self, name,price,coord, owner, mortgage_status):
+        self.property_name = name
+        self.price = price
+        self.owner = owner
+        self.properties = []
+        self.mortgage_status = mortgage_status
+        self.coord = coord
+    
+    def image(self,img_path):
+        img_path = f"{self.property_name}.png"
+        return pygame.transform.scale(pygame.image.load(img_path), (250,250))
+    
+    def calculate_rent(self):
+        pass
+        
+    def add_houses(self):
+        pass
+
+    def add_hotel(self):
+        pass 
+
+
+chance_cards = [
+    "Advance to Go. Collect $200.",
+    "Go directly to Jail. Do not pass Go. Do not collect $200.",
+    "Receive a Get Out of Jail Free card.",
+    "Pay a $50 fine for speeding.",
+    "Bank error in your favor. Collect $75.",
+    "Pay a $100 luxury tax.",
+    "You have won a crossword competition. Collect $100.",
+    "Advance to the nearest railroad and pay double the rent.",
+    "It's your birthday! Collect $10 from each player.",
+    "Go back three spaces.",
+    "Pay each player $20 for a charity donation.",
+    "Take a trip on the Reading Railroad. If you pass Go, collect $200.",
+    "Pay a $50 doctor's fee.",
+    "You inherit $100 from a relative.",
+    "Advance to Boardwalk. If you pass Go, collect $200.",
+    "Your building loan matures. Collect $150.",
+    "You've been elected Chairman of the Board. Pay each player $50.",
+    "You've won second prize in a beauty contest. Collect $10.",
+    "Advance to the nearest utility. If unowned, you may buy it from the bank. If owned, throw the dice and pay owner ten times the amount thrown.",
+    "Get caught in a property tax audit. Pay $25 for each house and $100 for each hotel you own."
+]
+
+community_chest_cards = [
+    "Advance to Go. Collect $200.",
+    "Bank error in your favor. Collect $75.",
+    "Doctor's fees. Pay $50.",
+    "Get out of Jail Free. This card may be kept until needed or sold.",
+    "Grand Opera Night. Collect $50 from every player for opening night seats.",
+    "Holiday Fund matures. Receive $100.",
+    "Income tax refund. Collect $20.",
+    "It's your birthday. Collect $10 from every player.",
+    "Life insurance matures. Collect $100.",
+    "Pay hospital fees of $100.",
+    "Pay school fees of $150.",
+    "Receive $25 consultancy fee.",
+    "You are assessed for street repairs. Pay $40 per house and $115 per hotel you own.",
+    "You have won second prize in a beauty contest. Collect $10.",
+    "You inherit $100.",
+    "From sale of stock, you get $45.",
+    "Go to Jail. Go directly to Jail. Do not pass Go. Do not collect $200.",
+    "You have been elected chairman of the board. Pay each player $50.",
+    "Your building loan matures. Receive $150.",
+    "You have won a crossword competition. Collect $100."
+]
+
+property_objects = [
+    Property("Go", 0, (1100, 675), None, False),
+    Property("Mediterranean Avenue", 60, (995, 675), None, False),
+    Property("Community Chest 1", 0, (910, 675), None, False),
+    Property("Baltic Avenue", 60, (825, 675), None, False),
+    Property("Income Tax", 0, (735, 675), None, False),
+    Property("Reading Railroad", 200, (650, 675), None, False),
+    Property("Oriental Avenue", 100, (565, 675), None, False),
+    Property("Chance 1", 0, (480, 675), None, False),
+    Property("Vermont Avenue", 100, (395, 675), None, False),
+    Property("Connecticut Avenue", 120, (310, 675), None, False),
+    Property("Jail", 0, (225, 675), None, False),
+    Property("St. Charles Place", 140, (130, 675), None, False),
+    Property("Electric Company", 150, (45, 675), None, False),
+    Property("States Avenue", 140, (10, 590), None, False),
+    Property("Virginia Avenue", 160, (10, 505), None, False),
+    Property("Pennsylvania Railroad", 200, (10, 420), None, False),
+    Property("St. James Place", 180, (10, 335), None, False),
+    Property("Community Chest 2", 0, (10, 250), None, False),
+    Property("Tennessee Avenue", 180, (10, 165), None, False),
+    Property("New York Avenue", 200, (10, 80), None, False),
+    Property("Free Parking", 0, (10, 10), None, False),
+    Property("Kentucky Avenue", 220, (95, 10), None, False),
+    Property("Chance 2", 0, (180, 10), None, False),
+    Property("Indiana Avenue", 220, (265, 10), None, False),
+    Property("Illinois Avenue", 240, (350, 10), None, False),
+    Property("B. & O. Railroad", 200, (435, 10), None, False),
+    Property("Atlantic Avenue", 260, (520, 10), None, False),
+    Property("Ventnor Avenue", 260, (605, 10), None, False),
+    Property("Water Works", 150, (690, 10), None, False),
+    Property("Marvin Gardens", 280, (775, 10), None, False),
+    Property("Go To Jail", 0, (860, 10), None, False),
+    Property("Pacific Avenue", 300, (945, 10), None, False),
+    Property("North Carolina Avenue", 300, (1030, 10), None, False),
+    Property("Community Chest 3", 0, (1115, 10), None, False),
+    Property("Pennsylvania Avenue", 320, (1190, 10), None, False),
+    Property("Short Line", 200, (1255, 95), None, False),
+    Property("Chance 3", 0, (1255, 180), None, False),
+    Property("Park Place", 350, (1255, 265), None, False),
+    Property("Luxury Tax", 0, (1255, 350), None, False),
+    Property("Boardwalk", 400, (1255, 435), None, False),
+]
+
 
 
 if __name__ == "__main__":

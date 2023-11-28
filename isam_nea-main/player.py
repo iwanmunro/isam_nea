@@ -1,58 +1,23 @@
-import time
 import pygame
-
-class cfButton():
-    def __init__(self, image, pos, text_input, font, base_color, hovering_color):
-        self.image = image
-        self.x_pos = pos[0]
-        self.y_pos = pos[1]
-        self.font = font
-        self.base_color, self.hovering_color = base_color, hovering_color
-        self.text_input = text_input
-        self.text = self.font.render(self.text_input, True, self.base_color)
-        self.visible = True # Add a 'visible' attribute and set it to True
-        if self.image is None:
-            self.image = self.text
-        self.rect = self.image.get_rect(center=(self.x_pos, self.y_pos))
-        self.text_rect = self.text.get_rect(center=(self.x_pos, self.y_pos))
-
-
-    def update(self, screen):
-        if self.visible:  # Check if the button is not disabled
-            if self.image is not None:
-                screen.blit(self.image, self.rect)
-                screen.blit(self.text, self.text_rect)
-        return self
-                
-    def checkForInput(self, position):
-        if self.visible and position[0] in range(self.rect.left, self.rect.right) and position[1] in range(self.rect.top, self.rect.bottom):
-            return True
-        return False
-
-    def changeColor(self, position):
-        if position[0] in range(self.rect.left, self.rect.right) and position[1] in range(self.rect.top, self.rect.bottom):
-            self.text = self.font.render(self.text_input, True, self.hovering_color)
-        else:
-            self.text = self.font.render(self.text_input, True, self.base_color)
-        return self
-
-    def hide(self):
-        self.visible = False
-
-    def show(self):
-        self.visible = True
-
+from properties import Property
 
 class Player():
-    def __init__(self, player_no=None, game_piece=None, piece_name=None):
+    def __init__(self, player_no=None, game_piece=None, piece_name=None,):
         self.player_no = player_no
         self.game_piece = game_piece
         self.piece_name = piece_name
         self.position = (0, 0)
-        self.position_int = 0
         self.properties = []
+        self.in_jail = False
+        self.position_int = 0
+        self.cash = 1500
+        self.houses = 0
+        self.hotels = 0
 
-
+    def image(self,img_path):
+        img_path = f"{self.game_piece}.png"
+        return pygame.transform.scale(pygame.image.load(img_path), (60,60))
+    
     def move(self, board, screen, mode="move"):
         if mode == "setup":
             self.game_piece = pygame.transform.scale(self.game_piece, (board.get_size()[0]/1/12, board.get_size()[1]/12))
@@ -105,3 +70,5 @@ class Player():
             screen.blit(self.game_piece, rect)
 
         return screen
+    
+
